@@ -1,0 +1,16 @@
+[
+  {
+    "log_type": "Java app",
+    "primary_root_cause": "The application failed to query the database due to a socket timeout, indicating that the database server did not respond within the expected timeframe, likely due to network issues or database server overload. The `Read timed out` exception nested within the `SQLException` points directly to a problem with the socket connection to the database.",
+    "example_error": "2025-11-25 10:15:25,789 ERROR [main] com.example.App - Failed to query database",
+    "quick_fix": "**Increase the JDBC read timeout value:** Temporarily increase the `socketTimeout` or `readTimeout` parameter in the JDBC connection string or connection pool configuration. This gives the database server more time to respond, potentially masking intermittent issues. Be cautious not to set it too high, as this could lead to hung threads.",
+    "long_term_fix": "**Implement database connection pool monitoring and alerting:** Monitor connection pool metrics (active connections, idle connections, wait times) and set up alerts for high utilization or long wait times. This will provide early warnings of database connectivity issues."
+  },
+  {
+    "log_type": "Java app",
+    "primary_root_cause": "The application failed to query the database due to a connection timeout, specifically a read timeout. This indicates the application successfully connected to the database, but the database failed to respond within the expected timeframe while attempting to read data.",
+    "example_error": "2025-11-25 10:15:25,789 ERROR [main] com.example.App - Failed to query database",
+    "quick_fix": "Increase the `socketTimeout` setting in the JDBC connection string or configuration. This allows the application to wait longer for a response from the database before timing out. Start with doubling the current timeout and monitor.",
+    "long_term_fix": "Implement database query performance monitoring and optimization. Identify and address slow-running queries that may be contributing to the read timeouts."
+  }
+]

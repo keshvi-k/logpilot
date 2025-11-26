@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import List
+from ..tools.log_search_tool import search_log, LogMatch
 
 @dataclass
 class LogSegment:
@@ -16,9 +17,19 @@ class SegmentResult:
 def run(log_text: str) -> SegmentResult:
     lines = log_text.splitlines()
 
-    error_lines = [ln for ln in lines if "ERROR" in ln or "Error" in ln or "Exception" in ln]
+    # Use our tool to find error-like lines
+    error_matches: List[LogMatch] = []
+    for keyword in ["error", "exception", "failed"]:
+        error_matches.extend(search_log(log_text, keyword, context_lines=1))
 
-    # Simple heuristic segments: first 30 lines, error zone around first error, last 30 lines
+    # Deduplicate by line number
+    seen = set()
+    error_lines = []
+    for m in error_matches:
+        if m.line_number not in seen:
+            seen.add(m.line_number)
+            error_lines.append(m.line)
+
     segments: List[LogSegment] = []
 
     if lines:
@@ -29,10 +40,13 @@ def run(log_text: str) -> SegmentResult:
         ))
 
     if error_lines:
-        # Take 30 lines around first error
-        first_error = lines.index(error_lines[0])
-        start = max(0, first_error - 15)
-        end = min(len(lines), first_error + 15)
+        # region around first error using its line_number
+        first_error_idx = next(
+            (i for i, ln in enumerate(lines) if ln == error_lines[0]),
+            0
+        )
+        start = max(0, first_error_idx - 15)
+        end = min(len(lines), first_error_idx + 15)
         segments.append(LogSegment(
             id="error_region",
             summary="Region around first error",
@@ -48,6 +62,7 @@ def run(log_text: str) -> SegmentResult:
 
     return SegmentResult(
         segments=segments,
-        error_samples=error_lines[:10],   # at most 10
+        error_samples=error_lines[:10],
     )
+
 

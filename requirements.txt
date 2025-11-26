@@ -1,0 +1,9 @@
+streamlit
+google-genai
+pydantic
+tqdm
+protobuf
+google-api-core
+google-api-python-client
+google-auth
+typing-extensions

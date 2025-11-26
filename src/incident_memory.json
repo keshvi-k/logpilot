@@ -12,5 +12,19 @@
     "example_error": "2025-11-25 10:15:25,789 ERROR [main] com.example.App - Failed to query database",
     "quick_fix": "Increase the `socketTimeout` setting in the JDBC connection string or configuration. This allows the application to wait longer for a response from the database before timing out. Start with doubling the current timeout and monitor.",
     "long_term_fix": "Implement database query performance monitoring and optimization. Identify and address slow-running queries that may be contributing to the read timeouts."
+  },
+  {
+    "log_type": "System",
+    "primary_root_cause": "Based on the provided logs, a user 'admin' successfully logged into the system via SSH using a public key. This in itself isn't an error, but it's a potential area of interest for further investigation if unauthorized activity is suspected around this time. The logs do not provide enough data to determine a root cause.",
+    "example_error": "",
+    "quick_fix": "Review recent 'admin' user activity for any anomalies (commands executed, files accessed, etc.)",
+    "long_term_fix": "Implement multi-factor authentication (MFA) for SSH logins, especially for privileged accounts like 'admin'."
+  },
+  {
+    "log_type": "Java app",
+    "primary_root_cause": "The application is experiencing a `NullPointerException` because the `getUserRecord` method in `com.app.data.Service` is returning `null` when attempting to retrieve a user record. The `UserHandler` then attempts to dereference this null object by calling `getName()` on it, resulting in the exception. This indicates a data inconsistency or failure to properly retrieve a user record with the ID 404.",
+    "example_error": "2025-11-26 15:35:10.600 [HTTP-Thread-2] ERROR com.app.data.Service - Failed to process request due to missing data.",
+    "quick_fix": "Implement a null check in `com.app.api.UserHandler.handleRequest` before calling `getName()` on the user record. Return an appropriate error response (e.g., HTTP 404) to the client if the user record is null. This will prevent the `NullPointerException` and provide a more informative response.",
+    "long_term_fix": "Investigate the root cause of why `getUserRecord` is returning null for user ID 404. Examine the data persistence layer to ensure data integrity. Potential causes could include data corruption, accidental deletion, or errors in data synchronization. Implement a data validation process to ensure user records are created and maintained correctly."
   }
 ]

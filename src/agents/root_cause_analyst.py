@@ -16,7 +16,8 @@ def run(
     segments: List[LogSegment],
     error_samples: List[str],
 ) -> RootCauseResult:
-    # Build a concise context
+
+    # Build a concise context without ANY backslashes inside {}
     segment_snippets = []
     for seg in segments:
         snippet = "\n".join(seg.sample_lines[:15])
@@ -24,31 +25,24 @@ def run(
 
     error_block = "\n".join(error_samples)
 
-    prompt = f"""
-You are an expert incident analyst.
-
-Log type: {log_type}
-
-Here are key log segments:
-{"\n\n".join(segment_snippets)}
-
-Here are some representative error lines:
-{error_block}
-
-From this, please identify:
-
-1. Primary root cause: <1–3 sentences>
-2. Key symptoms: <bullet list>
-3. Confidence: <number between 0 and 1>
-
-Respond in this format:
-
-Primary root cause: ...
-Symptoms:
-- ...
-- ...
-Confidence: ...
-"""
+    prompt = (
+        "You are an expert incident analyst.\n\n"
+        f"Log type: {log_type}\n\n"
+        "Here are key log segments:\n"
+        f"{chr(10).join(segment_snippets)}\n\n"
+        "Here are some representative error lines:\n"
+        f"{error_block}\n\n"
+        "From this, identify:\n\n"
+        "1. Primary root cause: <1–3 sentences>\n"
+        "2. Key symptoms: <bullet list>\n"
+        "3. Confidence: <number between 0 and 1>\n\n"
+        "Respond in this format:\n\n"
+        "Primary root cause: ...\n"
+        "Symptoms:\n"
+        "- ...\n"
+        "- ...\n"
+        "Confidence: ...\n"
+    )
 
     text = generate_text(prompt)
 
@@ -61,7 +55,7 @@ Confidence: ...
         lower = stripped.lower()
         if lower.startswith("primary root cause:"):
             primary_root_cause = stripped.split(":", 1)[1].strip()
-        elif lower.startswith("- "):
+        elif stripped.startswith("- "):
             symptoms.append(stripped[2:].strip())
         elif lower.startswith("confidence:"):
             val = stripped.split(":", 1)[1].strip()
@@ -76,4 +70,3 @@ Confidence: ...
         confidence=confidence,
         raw_analysis=text,
     )
-

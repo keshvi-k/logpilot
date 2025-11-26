@@ -1,0 +1,8 @@
+2025-11-25T03:10:23Z kubelet Node[worker-1] Created container app
+2025-11-25T03:10:25Z kubelet Node[worker-1] Started container app
+2025-11-25T03:10:26Z app      FATAL  java.lang.OutOfMemoryError: Java heap space
+2025-11-25T03:10:26Z app      at com.example.BatchProcessor.run(BatchProcessor.java:84)
+2025-11-25T03:10:27Z kubelet Node[worker-1] Back-off restarting failed container
+2025-11-25T03:10:30Z kubelet Node[worker-1] Back-off restarting failed container
+2025-11-25T03:10:35Z kubelet Node[worker-1] Back-off restarting failed container
+

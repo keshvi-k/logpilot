@@ -1,0 +1,12 @@
+2025-11-25 10:15:23,123 INFO  [main] com.example.App - Starting application
+2025-11-25 10:15:24,456 INFO  [main] com.example.App - Connecting to database...
+2025-11-25 10:15:25,789 ERROR [main] com.example.App - Failed to query database
+java.sql.SQLException: Connection timed out
+    at com.example.db.DbClient.query(DbClient.java:57)
+    at com.example.service.UserService.getUser(UserService.java:32)
+    at com.example.App.main(App.java:18)
+Caused by: java.net.SocketTimeoutException: Read timed out
+    at java.base/java.net.SocketInputStream.socketRead0(Native Method)
+    at java.base/java.net.SocketInputStream.socketRead(SocketInputStream.java:115)
+
+

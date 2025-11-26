@@ -1,0 +1,12 @@
+[2025-11-25 02:05:11,001] {taskinstance.py:1331} INFO - Starting attempt 1 of 3
+[2025-11-25 02:05:11,002] {taskinstance.py:1352} INFO - Executing <Task(BashOperator): load_to_bigquery> on 2025-11-24 00:00:00+00:00
+[2025-11-25 02:05:13,345] {bash_operator.py:158} INFO - Running command: python load_to_bigquery.py
+[2025-11-25 02:05:15,678] {bash_operator.py:172} INFO - Command failed with return code 1
+[2025-11-25 02:05:15,679] {logging_mixin.py:115} INFO - Traceback (most recent call last):
+  File "load_to_bigquery.py", line 45, in <module>
+    client = bigquery.Client()
+  File ".../google/cloud/bigquery/client.py", line 220, in __init__
+    self._credentials = get_default_credentials()
+google.auth.exceptions.DefaultCredentialsError: Could not automatically determine credentials
+[2025-11-25 02:05:15,680] {taskinstance.py:1511} ERROR - Task failed with exception
+

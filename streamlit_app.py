@@ -6,156 +6,366 @@ from src.agents.root_cause_analyst import run as analyze_root_cause
 from src.agents.fix_recommender import run as recommend_fixes
 from src.agents.knowledge_memory_agent import store_incident, find_similar
 
-# ---------- PAGE CONFIG ---------- #
+# =========================
+# PAGE CONFIG
+# =========================
 st.set_page_config(
     page_title="LogPilot – AI Log Incident Analyzer",
     layout="wide",
 )
 
-# ---------- CUSTOM CSS ---------- #
+# =========================
+# GLOBAL STYLES (NETFLIX THEME)
+# =========================
 st.markdown(
     """
     <style>
-    /* Global background */
+    /* Remove default padding */
+    .block-container {
+        padding-top: 1.5rem;
+        padding-bottom: 2rem;
+        padding-left: 2.5rem;
+        padding-right: 2.5rem;
+    }
+
+    /* App background */
     .stApp {
-        background: linear-gradient(135deg, #0f172a 0%, #020617 40%, #1e293b 100%);
+        background: radial-gradient(circle at top, #111827 0, #020617 40%, #020617 100%);
         color: #e5e7eb;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-    /* Main title */
-    .big-title {
-        font-size: 2.4rem;
-        font-weight: 800;
-        background: linear-gradient(90deg, #38bdf8, #a855f7, #f97316);
-        -webkit-background-clip: text;
-        color: transparent;
-        margin-bottom: 0.3rem;
+
+    /* Top navbar */
+    .lp-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.25rem 0 0.75rem 0;
+        border-bottom: 1px solid #1f2933;
+        margin-bottom: 1.25rem;
     }
-    .subtitle {
-        font-size: 0.95rem;
-        color: #9ca3af;
-        margin-bottom: 1.5rem;
+    .lp-logo {
+        font-size: 1.5rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        color: #ef4444;
     }
-    /* Card style */
-    .card {
-        border-radius: 14px;
-        padding: 1rem 1.2rem;
-        background: rgba(15,23,42,0.9);
-        border: 1px solid rgba(148,163,184,0.25);
-        box-shadow: 0 18px 45px rgba(15,23,42,0.75);
-    }
-    .metric-label {
+    .lp-nav-links {
         font-size: 0.8rem;
         text-transform: uppercase;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.18em;
         color: #9ca3af;
     }
-    .metric-value {
-        font-size: 1.3rem;
-        font-weight: 700;
+    .lp-nav-links span {
+        margin-left: 1.5rem;
+        cursor: default;
+    }
+
+    /* Hero section */
+    .lp-hero {
+        border-radius: 18px;
+        padding: 1.75rem 2rem 1.5rem 2rem;
+        background: radial-gradient(circle at top left, #7f1d1d 0, #111827 40%, #020617 100%);
+        border: 1px solid rgba(248,113,113,0.18);
+        box-shadow: 0 30px 80px rgba(0,0,0,0.75);
+        margin-bottom: 1.75rem;
+    }
+    .lp-hero-eyebrow {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: #f97373;
+        margin-bottom: 0.4rem;
+    }
+    .lp-hero-title {
+        font-size: 2.4rem;
+        font-weight: 800;
+        margin-bottom: 0.6rem;
+    }
+    .lp-hero-title span {
+        color: #ef4444;
+    }
+    .lp-hero-subtitle {
+        font-size: 0.95rem;
+        color: #e5e7eb;
+        max-width: 780px;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+    .lp-tag-row {
+        margin-top: 0.3rem;
+    }
+    .lp-tag {
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.78rem;
+        padding: 0.25rem 0.7rem;
+        border-radius: 999px;
+        border: 1px solid rgba(248,250,252,0.12);
+        background: rgba(15,23,42,0.7);
+        margin-right: 0.45rem;
+        margin-bottom: 0.35rem;
         color: #e5e7eb;
     }
-    /* Sidebar */
-    section[data-testid="stSidebar"] {
-        background: #020617;
-        border-right: 1px solid #1f2937;
+
+    /* Step heading */
+    .lp-step-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.2rem;
+    }
+    .lp-step-caption {
+        font-size: 0.85rem;
+        color: #9ca3af;
+        margin-bottom: 0.9rem;
+    }
+
+    /* Input cards */
+    .lp-card {
+        border-radius: 14px;
+        padding: 1rem 1.1rem;
+        background: linear-gradient(145deg, rgba(15,23,42,0.95), rgba(15,23,42,0.92));
+        border: 1px solid rgba(148,163,184,0.35);
+        box-shadow: 0 20px 60px rgba(15,23,42,0.85);
+    }
+    .lp-card-header {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 0.35rem;
+    }
+    .lp-card-sub {
+        font-size: 0.8rem;
+        color: #9ca3af;
+        margin-bottom: 0.6rem;
+    }
+
+    /* Metrics row */
+    .lp-metric-card {
+        border-radius: 14px;
+        padding: 0.9rem 1rem;
+        background: linear-gradient(145deg, #020617, #020617);
+        border: 1px solid rgba(75,85,99,0.9);
+    }
+    .lp-metric-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: #9ca3af;
+        margin-bottom: 0.2rem;
+    }
+    .lp-metric-value {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #f9fafb;
+    }
+
+    /* Tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 0.4rem;
+    }
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 999px;
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        background-color: #020617;
+        border: 1px solid #374151;
+    }
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, #ef4444, #f97316);
+        border-color: #f97316 !important;
+        color: white !important;
+    }
+
+    /* Primary button */
+    .stButton>button {
+        border-radius: 999px;
+        border: none;
+        background: linear-gradient(135deg, #ef4444, #f97316);
+        color: white;
+        font-weight: 600;
+        padding-top: 0.55rem;
+        padding-bottom: 0.55rem;
+        box-shadow: 0 12px 30px rgba(239,68,68,0.45);
+    }
+    .stButton>button:hover {
+        opacity: 0.96;
     }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-# ---------- HEADER ---------- #
-st.markdown('<div class="big-title">🛠️ LogPilot</div>', unsafe_allow_html=True)
+# =========================
+# NAVBAR
+# =========================
 st.markdown(
-    '<div class="subtitle">AI co-pilot for logs: detects issues, finds root causes, '
-    'recommends fixes, and learns from past incidents.</div>',
+    """
+    <div class="lp-nav">
+        <div class="lp-logo">LOGPILOT</div>
+        <div class="lp-nav-links">
+            <span>LOG ANALYTICS</span>
+            <span>RCA</span>
+            <span>DEVOPS COPILOT</span>
+        </div>
+    </div>
+    """,
     unsafe_allow_html=True,
 )
 
-# ---------- SIDEBAR: INPUT ---------- #
-st.sidebar.header("📥 Log Input")
-
-upload = st.sidebar.file_uploader("Upload log file (.log, .txt)", type=["log", "txt"])
-manual_text = st.sidebar.text_area(
-    "Or paste log text here",
-    height=220,
-    placeholder="Paste logs here if you don't want to upload a file...",
+# =========================
+# HERO SECTION
+# =========================
+st.markdown(
+    """
+    <div class="lp-hero">
+        <div class="lp-hero-eyebrow">AI INCIDENT ANALYSIS FOR ENGINEERING TEAMS</div>
+        <div class="lp-hero-title"><span>LogPilot</span> – AI Log Incident Analyzer</div>
+        <div class="lp-hero-subtitle">
+            Drop in your application or infrastructure logs and get a Netflix-style incident report:
+            detected log type, severity breakdown, segmented errors, root-cause explanation, and
+            production-ready remediation steps powered by multi-agent reasoning.
+        </div>
+        <div class="lp-tag-row">
+            <span class="lp-tag">Multi-agent LLM pipeline</span>
+            <span class="lp-tag">Root cause analysis</span>
+            <span class="lp-tag">Quick & long-term fixes</span>
+            <span class="lp-tag">Memory of past incidents</span>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
 
+# =========================
+# STEP 1: INPUT AREA (SIDE-BY-SIDE)
+# =========================
+st.markdown('<div class="lp-step-title">Step 1 • Provide your logs</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="lp-step-caption">Upload a .log/.txt file or paste raw log text into LogPilot.</div>',
+    unsafe_allow_html=True,
+)
+
+left_col, right_col = st.columns([1, 1.25])
+
+with left_col:
+    st.markdown('<div class="lp-card">', unsafe_allow_html=True)
+    st.markdown('<div class="lp-card-header">📁 Upload log file</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="lp-card-sub">Best for real application or infrastructure log exports.</div>',
+        unsafe_allow_html=True,
+    )
+    uploaded_file = st.file_uploader(
+        "Upload .log or .txt",
+        type=["log", "txt"],
+        label_visibility="collapsed",
+    )
+    st.markdown("</div>", unsafe_allow_html=True)
+
+with right_col:
+    st.markdown('<div class="lp-card">', unsafe_allow_html=True)
+    st.markdown('<div class="lp-card-header">📝 Paste log text</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="lp-card-sub">Copy–paste a log snippet directly from your terminal or console.</div>',
+        unsafe_allow_html=True,
+    )
+    pasted_text = st.text_area(
+        label="Paste logs here",
+        label_visibility="collapsed",
+        height=220,
+        placeholder="Paste logs here…",
+    )
+    st.markdown("</div>", unsafe_allow_html=True)
+
+st.markdown("")
+analyze_clicked = st.button("Analyze logs", use_container_width=True)
+
+# =========================
+# BACKEND + RESULTS
+# =========================
 log_text = None
-if upload is not None:
-    log_text = upload.read().decode("utf-8", errors="ignore")
-elif manual_text.strip():
-    log_text = manual_text
+if uploaded_file is not None:
+    log_text = uploaded_file.read().decode("utf-8", errors="ignore")
+if pasted_text and pasted_text.strip():
+    # Pasted text wins if both are provided
+    log_text = pasted_text
 
-analyze_clicked = st.sidebar.button("🔍 Analyze Logs", type="primary")
-st.sidebar.markdown("---")
-st.sidebar.caption("Tip: Run the same log again to see memory-based suggestions ✨")
-
-# ---------- MAIN CONTENT ---------- #
 if analyze_clicked:
     if not log_text:
         st.error("Please upload a log file or paste log text before analyzing.")
     else:
-        # Run agents
-        lt_result = detect_log_type(log_text)
-        seg_result = segment_logs(log_text)
-        rc_result = analyze_root_cause(
-            log_type=lt_result.log_type,
-            segments=seg_result.segments,
-            error_samples=seg_result.error_samples,
-        )
-        fix_result = recommend_fixes(
-            log_type=lt_result.log_type,
-            primary_root_cause=rc_result.primary_root_cause,
-            symptoms=rc_result.symptoms,
-        )
+        with st.spinner("Analyzing logs with LogPilot agents…"):
+            # ----- Agent calls -----
+            lt_result = detect_log_type(log_text)
+            seg_result = segment_logs(log_text)
+            rc_result = analyze_root_cause(
+                log_type=lt_result.log_type,
+                segments=seg_result.segments,
+                error_samples=seg_result.error_samples,
+            )
+            fix_result = recommend_fixes(
+                log_type=lt_result.log_type,
+                primary_root_cause=rc_result.primary_root_cause,
+                symptoms=rc_result.symptoms,
+            )
 
-        example_error = seg_result.error_samples[0] if seg_result.error_samples else ""
-        first_quick = fix_result.quick_fixes[0] if fix_result.quick_fixes else ""
-        first_long = fix_result.long_term_fixes[0] if fix_result.long_term_fixes else ""
+            # Prepare example data for memory
+            example_error = seg_result.error_samples[0] if seg_result.error_samples else ""
+            first_quick = fix_result.quick_fixes[0] if fix_result.quick_fixes else ""
+            first_long = fix_result.long_term_fixes[0] if fix_result.long_term_fixes else ""
 
-        # Store incident in memory
-        store_incident(
-            log_type=lt_result.log_type,
-            primary_root_cause=rc_result.primary_root_cause,
-            example_error=example_error,
-            quick_fix=first_quick,
-            long_term_fix=first_long,
-        )
+            store_incident(
+                log_type=lt_result.log_type,
+                primary_root_cause=rc_result.primary_root_cause,
+                example_error=example_error,
+                quick_fix=first_quick,
+                long_term_fix=first_long,
+            )
 
-        # ---------- TOP METRICS ROW ---------- #
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.markdown('<div class="card">', unsafe_allow_html=True)
-            st.markdown('<div class="metric-label">Log Type</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="metric-value">{lt_result.log_type}</div>', unsafe_allow_html=True)
+        # =========================
+        # METRICS ROW
+        # =========================
+        st.markdown("### Step 2 • Review the incident breakdown")
+
+        m1, m2, m3 = st.columns(3)
+        with m1:
+            st.markdown('<div class="lp-metric-card">', unsafe_allow_html=True)
+            st.markdown('<div class="lp-metric-label">Log type</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="lp-metric-value">{lt_result.log_type}</div>', unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
-        with col2:
+        with m2:
             total_errors = len(seg_result.error_samples)
-            st.markdown('<div class="card">', unsafe_allow_html=True)
-            st.markdown('<div class="metric-label">Detected Errors</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="metric-value">{total_errors}</div>', unsafe_allow_html=True)
+            st.markdown('<div class="lp-metric-card">', unsafe_allow_html=True)
+            st.markdown('<div class="lp-metric-label">Detected errors</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="lp-metric-value">{total_errors}</div>', unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
-        with col3:
+        with m3:
             conf_display = rc_result.confidence if rc_result.confidence is not None else "N/A"
-            st.markdown('<div class="card">', unsafe_allow_html=True)
-            st.markdown('<div class="metric-label">Model Confidence</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="metric-value">{conf_display}</div>', unsafe_allow_html=True)
+            st.markdown('<div class="lp-metric-card">', unsafe_allow_html=True)
+            st.markdown('<div class="lp-metric-label">Model confidence</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="lp-metric-value">{conf_display}</div>', unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
-        st.markdown("")  # spacing
+        st.markdown("")
 
-        # ---------- SECTIONS ---------- #
+        # =========================
+        # TABS: RCA / SEGMENTS / FIXES / MEMORY
+        # =========================
         tab1, tab2, tab3, tab4 = st.tabs(
-            ["🧮 Log Type & Severity", "🧩 Segments & Errors", "🧠 Root Cause", "🛡 Fixes & Memory"]
+            [
+                "Log type & severity",
+                "Segments & error samples",
+                "Root cause analysis",
+                "Fixes & memory",
+            ]
         )
 
-        # --- Tab 1: Log Type --- #
+        # ---- TAB 1 ----
         with tab1:
-            st.subheader("🧮 Log Type & Severity")
+            st.subheader("Log type & severity")
             st.write("**Detected log type:**", lt_result.log_type)
             if lt_result.severity_summary:
                 st.write("**Severity estimate:**")
@@ -164,9 +374,9 @@ if analyze_clicked:
                 st.caption("Classifier notes:")
                 st.code(lt_result.notes)
 
-        # --- Tab 2: Segments --- #
+        # ---- TAB 2 ----
         with tab2:
-            st.subheader("🧩 Segments & Error Samples")
+            st.subheader("Segments & error samples")
             st.write("**Segments found:**", [s.id for s in seg_result.segments])
 
             for seg in seg_result.segments:
@@ -180,9 +390,9 @@ if analyze_clicked:
             else:
                 st.info("No obvious error lines found.")
 
-        # --- Tab 3: Root Cause --- #
+        # ---- TAB 3 ----
         with tab3:
-            st.subheader("🧠 Root Cause Analysis")
+            st.subheader("Root cause analysis")
             st.markdown("**Primary root cause:**")
             st.info(rc_result.primary_root_cause)
 
@@ -194,16 +404,16 @@ if analyze_clicked:
             if rc_result.confidence is not None:
                 st.markdown(f"**Model confidence:** `{rc_result.confidence}`")
 
-        # --- Tab 4: Fixes & Memory --- #
+        # ---- TAB 4 ----
         with tab4:
-            st.subheader("🛡 Fix Recommendations & Memory")
+            st.subheader("Fix recommendations & memory lookup")
 
             similar = find_similar(
                 log_type=lt_result.log_type,
                 primary_root_cause=rc_result.primary_root_cause,
             )
             if similar:
-                st.success("✅ Similar past incident found in memory.")
+                st.success("Similar past incident found in memory.")
                 st.write("**Past root cause:**", similar.primary_root_cause)
                 st.write("**Past quick fix:**", similar.quick_fix)
                 st.write("**Past long-term fix:**", similar.long_term_fix)
@@ -211,25 +421,21 @@ if analyze_clicked:
                 st.warning("No similar past incident found in memory yet for this pattern.")
 
             st.markdown("---")
-            st.subheader("⚡ Quick Fixes")
+            st.markdown("#### Quick fixes")
             if fix_result.quick_fixes:
                 for q in fix_result.quick_fixes:
                     st.markdown(f"- {q}")
             else:
                 st.write("_No quick fixes parsed._")
 
-            st.subheader("🏗 Long-term Prevention")
+            st.markdown("#### Long-term prevention")
             if fix_result.long_term_fixes:
                 for item in fix_result.long_term_fixes:
                     st.markdown(f"- {item}")
             else:
                 st.write("_No long-term fixes parsed._")
 
-        st.success("Analysis complete and incident stored in memory 🎉")
+        st.success("Analysis complete and incident stored in memory.")
 
 else:
-    st.info("Use the sidebar to upload a log file or paste log text, then click **🔍 Analyze Logs**.")
-    st.code(
-        "Tip: start with your sample files like `java_error.log`, `airflow_failure.log`, or `k8s_crashloop.log`.",
-        language="bash",
-    )
+    st.info("Upload a log file or paste log text above, then click **Analyze logs** to generate your incident report.")

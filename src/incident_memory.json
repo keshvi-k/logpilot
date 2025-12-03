@@ -26,5 +26,26 @@
     "example_error": "2025-11-26 15:35:10.600 [HTTP-Thread-2] ERROR com.app.data.Service - Failed to process request due to missing data.",
     "quick_fix": "Implement a null check in `com.app.api.UserHandler.handleRequest` before calling `getName()` on the user record. Return an appropriate error response (e.g., HTTP 404) to the client if the user record is null. This will prevent the `NullPointerException` and provide a more informative response.",
     "long_term_fix": "Investigate the root cause of why `getUserRecord` is returning null for user ID 404. Examine the data persistence layer to ensure data integrity. Potential causes could include data corruption, accidental deletion, or errors in data synchronization. Implement a data validation process to ensure user records are created and maintained correctly."
+  },
+  {
+    "log_type": "Java app",
+    "primary_root_cause": "The application failed to query the database because the connection timed out while reading data from the database socket. This suggests a network issue, database overload, or misconfigured timeout settings on the application or database server.",
+    "example_error": "2025-11-25 10:15:25,789 ERROR [main] com.example.App - Failed to query database",
+    "quick_fix": "Restart the application servers to clear potentially exhausted connection pools.",
+    "long_term_fix": "Investigate network latency between the application servers and the database server using tools like `ping`, `traceroute`, and `mtr`."
+  },
+  {
+    "log_type": "Java app",
+    "primary_root_cause": "The `com.app.data.Service.getUserRecord(int)` method returned a null value when attempting to retrieve user data for user ID 404. This null value was then used in `com.app.api.UserHandler.handleRequest` when attempting to call `getName()` on the returned User object, resulting in a NullPointerException. The underlying cause is likely that user ID 404 does not exist in the data store, or that there was an error during data retrieval.",
+    "example_error": "2025-11-26 15:35:10.600 [HTTP-Thread-2] ERROR com.app.data.Service - Failed to process request due to missing data.",
+    "quick_fix": "Okay, I understand. Here's a proposed set of fixes, following the specified format:\n\n**Quick fixes:**\n\n*   Implement a null check in `com.app.api.UserHandler.handleRequest` before calling `getName()` on the User object. If the User object is null, return an appropriate error response (e.g., HTTP 404 Not Found) to the client and log the event.\n*   Add a try-catch block around the call to `com.app.data.Service.getUserRecord(int)` in `com.app.api.UserHandler.handleRequest`. If a null value is caught, log the error and return an appropriate error response to the client.\n\n**Long-term prevention:**\n\n*   Implement data validation in `com.app.data.Service.getUserRecord(int)` to explicitly check if the user ID exists before attempting to retrieve the record. If the user ID does not exist, return an empty User object or throw a custom exception (e.g., `UserNotFoundException`) instead of returning null.\n*   Enhance logging in `com.app.data.Service.getUserRecord(int)` to provide more detailed information about the failure to retrieve the user record, including the specific data store being queried and any underlying errors. Implement metrics to track the frequency of \"user not found\" events.\n",
+    "long_term_fix": ""
+  },
+  {
+    "log_type": "Java app",
+    "primary_root_cause": "The application failed to query the database because the database connection timed out while reading data, indicating a network issue or a slow database response. The underlying cause is a `java.net.SocketTimeoutException: Read timed out`.",
+    "example_error": "2025-11-25 10:15:25,789 ERROR [main] com.example.App - Failed to query database",
+    "quick_fix": "Restart the application server. This will establish a new connection pool and might resolve temporary network glitches or database congestion.",
+    "long_term_fix": "Implement connection pooling with proper timeout settings and retry mechanisms. Configure connection pool settings like `connectionTimeout`, `socketTimeout`, `idleTimeout`, and `maxLifetime` to appropriately handle slow database responses and stale connections. Add retry logic with exponential backoff to handle transient network issues or database unavailability."
   }
 ]

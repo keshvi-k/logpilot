@@ -1,4 +1,11 @@
+import os
+import sys
 import streamlit as st
+
+# Ensure project root is on sys.path (usually already is, but safe)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if BASE_DIR not in sys.path:
+    sys.path.append(BASE_DIR)
 
 from src.agents.log_type_detector import run as detect_log_type
 from src.agents.segmenter_cluster import run as segment_logs

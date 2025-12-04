@@ -47,5 +47,19 @@
     "example_error": "2025-11-25 10:15:25,789 ERROR [main] com.example.App - Failed to query database",
     "quick_fix": "Restart the application server. This will establish a new connection pool and might resolve temporary network glitches or database congestion.",
     "long_term_fix": "Implement connection pooling with proper timeout settings and retry mechanisms. Configure connection pool settings like `connectionTimeout`, `socketTimeout`, `idleTimeout`, and `maxLifetime` to appropriately handle slow database responses and stale connections. Add retry logic with exponential backoff to handle transient network issues or database unavailability."
+  },
+  {
+    "log_type": "Kubernetes",
+    "primary_root_cause": "The container `myapp` is being killed due to exceeding its memory limit (OOMKilled). The container is configured with a memory limit of 256Mi, but its memory usage reached 512Mi. This leads to a `CrashLoopBackOff` state because Kubernetes keeps trying to restart the failed container.",
+    "example_error": "Error    Failed     2m4s                kubelet",
+    "quick_fix": "**Increase the memory limit of the `myapp` container:** Immediately update the `myapp` deployment configuration to increase the memory limit. A safe initial increase would be to double it to 512Mi. Use `kubectl edit deployment myapp-deployment -n production` to apply the change and observe the pod's behavior.",
+    "long_term_fix": "**Implement memory usage monitoring and alerting:** Set up monitoring for the `myapp` container's memory usage. Configure alerts that trigger when memory usage approaches the configured limit (e.g., 80% threshold). This will provide early warning signs of memory pressure and allow for proactive intervention. Use tools like Prometheus with Grafana, or a cloud provider's built-in monitoring solutions."
+  },
+  {
+    "log_type": "Kubernetes",
+    "primary_root_cause": "The container `myapp` is being killed due to exceeding its memory limit (OOMKilled). The container attempts to restart but fails repeatedly, resulting in a CrashLoopBackOff.",
+    "example_error": "Error    Failed     2m4s                kubelet",
+    "quick_fix": "Increase the memory limit for the `myapp` container. Use `kubectl edit deployment/myapp` or the equivalent YAML definition to increase the `resources.limits.memory` value. Double it initially to see if the issue resolves.",
+    "long_term_fix": "Profile `myapp`'s memory usage to understand its actual memory footprint. Use tools like heap dumps, memory profiling libraries within the application, or Kubernetes resource usage metrics to gain insight into memory consumption patterns."
   }
 ]

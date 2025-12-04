@@ -295,147 +295,156 @@ if analyze_clicked:
     if not log_text:
         st.error("Please upload a log file or paste log text before analyzing.")
     else:
-        with st.spinner("Analyzing logs with LogPilot agents…"):
-            # ----- Agent calls -----
-            lt_result = detect_log_type(log_text)
-            seg_result = segment_logs(log_text)
-            rc_result = analyze_root_cause(
-                log_type=lt_result.log_type,
-                segments=seg_result.segments,
-                error_samples=seg_result.error_samples,
-            )
-            fix_result = recommend_fixes(
-                log_type=lt_result.log_type,
-                primary_root_cause=rc_result.primary_root_cause,
-                symptoms=rc_result.symptoms,
-            )
-
-            # Prepare example data for memory
-            example_error = seg_result.error_samples[0] if seg_result.error_samples else ""
-            first_quick = fix_result.quick_fixes[0] if fix_result.quick_fixes else ""
-            first_long = fix_result.long_term_fixes[0] if fix_result.long_term_fixes else ""
-
-            store_incident(
-                log_type=lt_result.log_type,
-                primary_root_cause=rc_result.primary_root_cause,
-                example_error=example_error,
-                quick_fix=first_quick,
-                long_term_fix=first_long,
-            )
-
-        # =========================
-        # METRICS ROW
-        # =========================
+        # Show Step 2 heading as soon as we start analysis
         st.markdown("### Step 2 • Review the incident breakdown")
 
-        m1, m2, m3 = st.columns(3)
-        with m1:
-            st.markdown('<div class="lp-metric-card">', unsafe_allow_html=True)
-            st.markdown('<div class="lp-metric-label">Log type</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="lp-metric-value">{lt_result.log_type}</div>', unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+        try:
+            with st.spinner("Analyzing logs with LogPilot agents…"):
+                # ----- Agent calls -----
+                lt_result = detect_log_type(log_text)
+                seg_result = segment_logs(log_text)
+                rc_result = analyze_root_cause(
+                    log_type=lt_result.log_type,
+                    segments=seg_result.segments,
+                    error_samples=seg_result.error_samples,
+                )
+                fix_result = recommend_fixes(
+                    log_type=lt_result.log_type,
+                    primary_root_cause=rc_result.primary_root_cause,
+                    symptoms=rc_result.symptoms,
+                )
 
-        with m2:
-            total_errors = len(seg_result.error_samples)
-            st.markdown('<div class="lp-metric-card">', unsafe_allow_html=True)
-            st.markdown('<div class="lp-metric-label">Detected errors</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="lp-metric-value">{total_errors}</div>', unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+                # Prepare example data for memory
+                example_error = seg_result.error_samples[0] if seg_result.error_samples else ""
+                first_quick = fix_result.quick_fixes[0] if fix_result.quick_fixes else ""
+                first_long = fix_result.long_term_fixes[0] if fix_result.long_term_fixes else ""
 
-        with m3:
-            conf_display = rc_result.confidence if rc_result.confidence is not None else "N/A"
-            st.markdown('<div class="lp-metric-card">', unsafe_allow_html=True)
-            st.markdown('<div class="lp-metric-label">Model confidence</div>', unsafe_allow_html=True)
-            st.markdown(f'<div class="lp-metric-value">{conf_display}</div>', unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+                store_incident(
+                    log_type=lt_result.log_type,
+                    primary_root_cause=rc_result.primary_root_cause,
+                    example_error=example_error,
+                    quick_fix=first_quick,
+                    long_term_fix=first_long,
+                )
 
-        st.markdown("")
+        except Exception as e:
+            # If anything in the agents/LLM fails, show it instead of crashing the app
+            st.error(f"Analysis failed: {e}")
+        else:
+            # =========================
+            # METRICS ROW
+            # =========================
+            m1, m2, m3 = st.columns(3)
+            with m1:
+                st.markdown('<div class="lp-metric-card">', unsafe_allow_html=True)
+                st.markdown('<div class="lp-metric-label">Log type</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="lp-metric-value">{lt_result.log_type}</div>', unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
 
-        # =========================
-        # TABS: RCA / SEGMENTS / FIXES / MEMORY
-        # =========================
-        tab1, tab2, tab3, tab4 = st.tabs(
-            [
-                "Log type & severity",
-                "Segments & error samples",
-                "Root cause analysis",
-                "Fixes & memory",
-            ]
-        )
+            with m2:
+                total_errors = len(seg_result.error_samples)
+                st.markdown('<div class="lp-metric-card">', unsafe_allow_html=True)
+                st.markdown('<div class="lp-metric-label">Detected errors</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="lp-metric-value">{total_errors}</div>', unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
 
-        # ---- TAB 1 ----
-        with tab1:
-            st.subheader("Log type & severity")
-            st.write("**Detected log type:**", lt_result.log_type)
-            if lt_result.severity_summary:
-                st.write("**Severity estimate:**")
-                st.json(lt_result.severity_summary)
-            if lt_result.notes:
-                st.caption("Classifier notes:")
-                st.code(lt_result.notes)
+            with m3:
+                conf_display = rc_result.confidence if rc_result.confidence is not None else "N/A"
+                st.markdown('<div class="lp-metric-card">', unsafe_allow_html=True)
+                st.markdown('<div class="lp-metric-label">Model confidence</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="lp-metric-value">{conf_display}</div>', unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
 
-        # ---- TAB 2 ----
-        with tab2:
-            st.subheader("Segments & error samples")
-            st.write("**Segments found:**", [s.id for s in seg_result.segments])
+            st.markdown("")
 
-            for seg in seg_result.segments:
-                with st.expander(f"Segment `{seg.id}` – {seg.summary}"):
-                    sample = "\n".join(seg.sample_lines[:25])
-                    st.code(sample or "(no sample lines)")
-
-            st.markdown("**Error samples (up to 10):**")
-            if seg_result.error_samples:
-                st.code("\n".join(seg_result.error_samples))
-            else:
-                st.info("No obvious error lines found.")
-
-        # ---- TAB 3 ----
-        with tab3:
-            st.subheader("Root cause analysis")
-            st.markdown("**Primary root cause:**")
-            st.info(rc_result.primary_root_cause)
-
-            if rc_result.symptoms:
-                st.markdown("**Symptoms observed:**")
-                for s in rc_result.symptoms:
-                    st.markdown(f"- {s}")
-
-            if rc_result.confidence is not None:
-                st.markdown(f"**Model confidence:** `{rc_result.confidence}`")
-
-        # ---- TAB 4 ----
-        with tab4:
-            st.subheader("Fix recommendations & memory lookup")
-
-            similar = find_similar(
-                log_type=lt_result.log_type,
-                primary_root_cause=rc_result.primary_root_cause,
+            # =========================
+            # TABS: RCA / SEGMENTS / FIXES / MEMORY
+            # =========================
+            tab1, tab2, tab3, tab4 = st.tabs(
+                [
+                    "Log type & severity",
+                    "Segments & error samples",
+                    "Root cause analysis",
+                    "Fixes & memory",
+                ]
             )
-            if similar:
-                st.success("Similar past incident found in memory.")
-                st.write("**Past root cause:**", similar.primary_root_cause)
-                st.write("**Past quick fix:**", similar.quick_fix)
-                st.write("**Past long-term fix:**", similar.long_term_fix)
-            else:
-                st.warning("No similar past incident found in memory yet for this pattern.")
 
-            st.markdown("---")
-            st.markdown("#### Quick fixes")
-            if fix_result.quick_fixes:
-                for q in fix_result.quick_fixes:
-                    st.markdown(f"- {q}")
-            else:
-                st.write("_No quick fixes parsed._")
+            # ---- TAB 1 ----
+            with tab1:
+                st.subheader("Log type & severity")
+                st.write("**Detected log type:**", lt_result.log_type)
+                if getattr(lt_result, "severity_summary", None):
+                    st.write("**Severity estimate:**")
+                    st.json(lt_result.severity_summary)
+                if getattr(lt_result, "notes", None):
+                    st.caption("Classifier notes:")
+                    st.code(lt_result.notes)
 
-            st.markdown("#### Long-term prevention")
-            if fix_result.long_term_fixes:
-                for item in fix_result.long_term_fixes:
-                    st.markdown(f"- {item}")
-            else:
-                st.write("_No long-term fixes parsed._")
+            # ---- TAB 2 ----
+            with tab2:
+                st.subheader("Segments & error samples")
+                if getattr(seg_result, "segments", None):
+                    st.write("**Segments found:**", [s.id for s in seg_result.segments])
 
-        st.success("Analysis complete and incident stored in memory.")
+                    for seg in seg_result.segments:
+                        with st.expander(f"Segment `{seg.id}` – {seg.summary}"):
+                            sample = "\n".join(seg.sample_lines[:25])
+                            st.code(sample or "(no sample lines)")
+                else:
+                    st.info("No segments returned from the segmenter agent.")
+
+                st.markdown("**Error samples (up to 10):**")
+                if getattr(seg_result, "error_samples", None):
+                    st.code("\n".join(seg_result.error_samples))
+                else:
+                    st.info("No obvious error lines found.")
+
+            # ---- TAB 3 ----
+            with tab3:
+                st.subheader("Root cause analysis")
+                st.markdown("**Primary root cause:**")
+                st.info(rc_result.primary_root_cause)
+
+                if getattr(rc_result, "symptoms", None):
+                    st.markdown("**Symptoms observed:**")
+                    for s in rc_result.symptoms:
+                        st.markdown(f"- {s}")
+
+                if getattr(rc_result, "confidence", None) is not None:
+                    st.markdown(f"**Model confidence:** `{rc_result.confidence}`")
+
+            # ---- TAB 4 ----
+            with tab4:
+                st.subheader("Fix recommendations & memory lookup")
+
+                similar = find_similar(
+                    log_type=lt_result.log_type,
+                    primary_root_cause=rc_result.primary_root_cause,
+                )
+                if similar:
+                    st.success("Similar past incident found in memory.")
+                    st.write("**Past root cause:**", similar.primary_root_cause)
+                    st.write("**Past quick fix:**", similar.quick_fix)
+                    st.write("**Past long-term fix:**", similar.long_term_fix)
+                else:
+                    st.warning("No similar past incident found in memory yet for this pattern.")
+
+                st.markdown("---")
+                st.markdown("#### Quick fixes")
+                if getattr(fix_result, "quick_fixes", None):
+                    for q in fix_result.quick_fixes:
+                        st.markdown(f"- {q}")
+                else:
+                    st.write("_No quick fixes parsed._")
+
+                st.markdown("#### Long-term prevention")
+                if getattr(fix_result, "long_term_fixes", None):
+                    for item in fix_result.long_term_fixes:
+                        st.markdown(f"- {item}")
+                else:
+                    st.write("_No long-term fixes parsed._")
+
+            st.success("Analysis complete and incident stored in memory.")
 
 else:
     st.info("Upload a log file or paste log text above, then click **Analyze logs** to generate your incident report.")

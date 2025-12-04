@@ -1,5 +1,6 @@
 import os
 from google import genai
+import streamlit as st   # 👈 add this
 
 # Single client reused everywhere
 _client = None
@@ -7,9 +8,16 @@ _client = None
 def get_client():
     global _client
     if _client is None:
-        api_key = os.environ.get("GOOGLE_API_KEY")
+        # 1) Try Streamlit secrets (Streamlit Cloud)
+        api_key = st.secrets.get("GOOGLE_API_KEY")
+
+        # 2) Fallback to env var (for local dev)
         if not api_key:
-            raise RuntimeError("GOOGLE_API_KEY is not set")
+            api_key = os.environ.get("GOOGLE_API_KEY")
+
+        if not api_key:
+            raise RuntimeError("GOOGLE_API_KEY is not set (check Streamlit secrets).")
+
         _client = genai.Client(api_key=api_key)
     return _client
 

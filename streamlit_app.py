@@ -230,7 +230,7 @@ st.markdown(
         <div class="lp-hero-eyebrow">AI INCIDENT ANALYSIS FOR ENGINEERING TEAMS</div>
         <div class="lp-hero-title"><span>LogPilot</span> – AI Log Incident Analyzer</div>
         <div class="lp-hero-subtitle">
-            Drop in your application or infrastructure logs and get a Netflix-style incident report:
+            Drop in your application or infrastructure logs and get a incident report:
             detected log type, severity breakdown, segmented errors, root-cause explanation, and
             production-ready remediation steps powered by multi-agent reasoning.
         </div>
@@ -257,7 +257,7 @@ st.markdown(
 left_col, right_col = st.columns([1, 1.25])
 
 with left_col:
-    st.markdown('<div class="lp-card">', unsafe_allow_html=True)
+#   st.markdown('<div class="lp-card">', unsafe_allow_html=True)
     st.markdown('<div class="lp-card-header">📁 Upload log file</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="lp-card-sub">Best for real application or infrastructure log exports.</div>',
@@ -271,7 +271,7 @@ with left_col:
     st.markdown("</div>", unsafe_allow_html=True)
 
 with right_col:
-    st.markdown('<div class="lp-card">', unsafe_allow_html=True)
+#   st.markdown('<div class="lp-card">', unsafe_allow_html=True)
     st.markdown('<div class="lp-card-header">📝 Paste log text</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="lp-card-sub">Copy–paste a log snippet directly from your terminal or console.</div>',
